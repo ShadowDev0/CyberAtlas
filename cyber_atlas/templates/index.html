@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberAtlas</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- GARDE TON CSS IDENTIQUE ICI --- */
+        :root { --bg-dark-main: #1a1a1a; --bg-dark-secondary: #2c2c2c; --bg-dark-sidebar: #121212; --text-color: #ffffff; --text-muted: #a0a0a0; --accent-yellow: #FFC107; --accent-blue: #3498db; --accent-red: #e74c3c; --card-bg: #1E1E1E; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body { background-color: var(--bg-dark-main); color: var(--text-color); height: 100vh; display: flex; flex-direction: column; }
+        .main-header { background-color: #000; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bg-dark-secondary); }
+        .logo { font-size: 1.2rem; font-weight: bold; }
+        .header-center { text-align: center; } .header-center h1 { font-size: 1.1rem; color: var(--accent-blue); letter-spacing: 1px; }
+        .header-nav { display: flex; gap: 15px; font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; } .header-nav span.active { color: white; font-weight: bold; }
+        .header-right { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text-muted); } .header-right a { color: var(--text-muted); text-decoration: none; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 70px; background-color: var(--bg-dark-sidebar); display: flex; flex-direction: column; align-items: center; padding-top: 20px; border-right: 1px solid var(--bg-dark-secondary); }
+        .sidebar-item { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; position: relative; text-decoration: none;}
+        .sidebar-item i { font-size: 1.4rem; margin-bottom: 5px; } .sidebar-item.active { color: white; }
+        .add-button-sidebar { background-color: #333; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
+        .map-area { flex: 1; position: relative; }
+        #map { height: 100%; width: 100%; background-color: #242f3e; }
+        .search-bar-container { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 400px; }
+        .search-bar { background-color: var(--bg-dark-secondary); border: none; padding: 12px 20px 12px 45px; border-radius: 25px; width: 100%; color: var(--text-color); }
+        .search-icon { position: absolute; left: 15px; top: 12px; color: var(--text-muted); }
+        .filters-btn { position: absolute; top: 20px; left: 20px; z-index: 1000; background-color: black; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .top-right-controls { position: absolute; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; align-items: center; }
+        .discord-btn, .continent-select { background-color: var(--bg-dark-secondary); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; } .discord-btn { background-color: #5865F2; }
+        .contributions-btn { position: absolute; bottom: 30px; right: 20px; z-index: 1000; background-color: black; color: white; border: none; padding: 12px 20px; border-radius: 25px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .map-footer-links { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; font-size: 0.8rem; color: var(--text-muted); } .map-footer-links a { color: var(--text-muted); text-decoration: none; margin: 0 5px; }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background-color: var(--card-bg); color: var(--text-color); border-radius: 12px; }
+        .leaflet-popup-content { margin: 15px; width: 280px !important; } .leaflet-container a.leaflet-popup-close-button { color: var(--text-muted); }
+        .popup-card h3 { font-size: 1.1rem; margin-bottom: 5px; display: flex; justify-content: space-between; } .popup-card .favorite-star { color: var(--accent-yellow); font-size: 0.9rem; cursor: pointer; }
+        .popup-card p.location { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; } .popup-card .category { color: var(--accent-yellow); font-weight: bold; font-size: 0.9rem; }
+        .popup-card .added-by { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; } .popup-card .jobs-section { border-top: 1px solid #333; padding-top: 10px; margin-bottom: 15px; } .popup-card .jobs-section h4 { font-size: 0.9rem; margin-bottom: 5px; } .popup-card .jobs-section p { font-size: 0.85rem; color: var(--text-muted); }
+        .popup-buttons { display: flex; gap: 10px; margin-bottom: 15px; } .btn-popup { flex: 1; padding: 8px; border-radius: 20px; border: none; cursor: pointer; font-size: 0.9rem; } .btn-light { background-color: #ddd; color: black; } .btn-dark { background-color: #333; color: white; border: 1px solid #555; }
+    </style>
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="logo">CyberAtlas</div>
+        <div class="header-center">
+            <h1>EVENEMENTS</h1>
+            <div class="header-nav"><span class="active">Présentiel</span><span>Hybride</span><span>Distanciel</span></div>
+        </div>
+        <div class="header-right">
+            {% if current_user.is_authenticated %}
+                <span style="color:var(--accent-blue);">Salut, {{ current_user.username }} !</span>
+            {% endif %}
+            <a href="#">Actualités</a><a href="#">Contact</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="sidebar-item"><div class="add-button-sidebar"><i class="fas fa-plus"></i></div><span>Ajouter</span></div>
+            <div class="sidebar-item active"><i class="fas fa-map"></i><span>Carte</span></div>
+            <div class="sidebar-item"><i class="fas fa-briefcase"></i><span>Emplois</span></div>
+            
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('auth.logout') }}" class="sidebar-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Quitter</span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="sidebar-item">
+                    <i class="fas fa-user"></i>
+                    <span>Profil</span>
+                </a>
+            {% endif %}
+        </aside>
+
+        <main class="map-area">
+            <button class="filters-btn"><i class="fas fa-filter"></i> Filtres</button>
+            <div class="search-bar-container"><i class="fas fa-search search-icon"></i><input type="text" class="search-bar" placeholder="Rechercher un studio"></div>
+            <div class="top-right-controls">
+                <select class="continent-select"><option>Continent</option></select>
+                <button class="discord-btn"><i class="fab fa-discord"></i></button>
+            </div>
+            <button class="contributions-btn"><i class="fas fa-bolt"></i> Contributions</button>
+            <div id="map"></div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <script>
+        const map = L.map('map').setView([46.603354, 1.888334], 6);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        const yellowIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div style="background-color: #FFC107; width: 15px; height: 15px; border-radius: 50%; border: 2px solid white;"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        async function chargerStudios() {
+            try {
+                const reponse = await fetch('/api/studios');
+                const studios = await reponse.json();
+
+                studios.forEach(studio => {
+                    let textOffres = studio.offres > 0 ? `${studio.offres} offre(s) disponible(s)` : "Aucune offre pour le moment";
+                    
+                    const popupContent = `
+                        <div class="popup-card">
+                            <h3>${studio.nom} <i class="far fa-star favorite-star"></i></h3>
+                            <p class="location">${studio.ville}</p>
+                            <p class="category">${studio.categorie}</p>
+                            <p class="added-by">Ajouté par <a href="#" style="color:var(--text-muted);">${studio.auteur}</a></p>
+                            
+                            <div class="jobs-section">
+                                <h4>Offres d'emploi</h4>
+                                <p>${textOffres}</p>
+                            </div>
+
+                            <div class="popup-buttons">
+                                <button class="btn-popup btn-light">Voir la fiche</button>
+                                <button class="btn-popup btn-dark">Site Web</button>
+                            </div>
+                        </div>
+                    `;
+
+                    L.marker([studio.lat, studio.lng], {icon: yellowIcon})
+                     .addTo(map)
+                     .bindPopup(popupContent);
+                });
+            } catch (erreur) {
+                console.error("Erreur lors du chargement des studios:", erreur);
+            }
+        }
+
+        chargerStudios();
+    </script>
+</body>
+</html>
