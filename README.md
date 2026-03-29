@@ -1,1 +1,1 @@
-Merci de prendre ce début avec des pincettes car bien trop fragile car je voulais test Gemini en code et Pro
+Site fait entierement avec Claude.ai je ne suis pas dev
