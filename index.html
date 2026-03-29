@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EVENTMAP // GRID</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --void:       #08060f;
+      --deep:       #0e0b1a;
+      --surface:    #13102b;
+      --panel:      #1a1535;
+      --border:     #2a2060;
+      --purple-dim: #4a2d8a;
+      --purple:     #7c3aed;
+      --purple-hi:  #a855f7;
+      --violet:     #c084fc;
+      --cyan:       #22d3ee;
+      --cyan-dim:   #0e7490;
+      --text:       #e2d9f3;
+      --text-dim:   #7c6fa0;
+      --text-muted: #3d3560;
+      --glow-p:     rgba(124, 58, 237, 0.4);
+      --glow-c:     rgba(34, 211, 238, 0.3);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--void);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      overflow: hidden;
+    }
+
+    /* ── SCANLINES overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── LAYOUT ── */
+    #app {
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      grid-template-columns: 340px 1fr;
+      height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    #header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 20px;
+      background: var(--deep);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 0 20px var(--glow-p);
+    }
+
+    .logo {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: 1.1rem;
+      letter-spacing: 0.15em;
+      color: var(--purple-hi);
+      text-shadow: 0 0 12px var(--purple), 0 0 30px var(--glow-p);
+    }
+
+    .logo span { color: var(--cyan); text-shadow: 0 0 12px var(--cyan), 0 0 30px var(--glow-c); }
+
+    .header-sep { flex: 1; }
+
+    .status-bar {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      background: var(--deep);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    /* ── DATE PICKER ── */
+    .date-wrapper {
+      position: relative;
+    }
+
+    #date-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.9rem;
+      padding: 10px 14px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    #date-input:focus, #date-input:hover {
+      border-color: var(--purple);
+      box-shadow: 0 0 12px var(--glow-p), inset 0 0 8px rgba(124,58,237,0.05);
+    }
+
+    #date-input::-webkit-calendar-picker-indicator {
+      filter: invert(1) sepia(1) saturate(3) hue-rotate(250deg);
+      cursor: pointer;
+    }
+
+    .date-clear {
+      margin-top: 8px;
+      width: 100%;
+      padding: 6px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+
+    .date-clear:hover {
+      border-color: var(--cyan-dim);
+      color: var(--cyan);
+      box-shadow: 0 0 8px var(--glow-c);
+    }
+
+    /* ── EVENT LIST ── */
+    #event-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--purple-dim) var(--surface);
+    }
+
+    #event-list::-webkit-scrollbar { width: 4px; }
+    #event-list::-webkit-scrollbar-track { background: var(--surface); }
+    #event-list::-webkit-scrollbar-thumb { background: var(--purple-dim); }
+
+    .event-card {
+      padding: 12px;
+      margin-bottom: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .event-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--purple);
+      box-shadow: 0 0 8px var(--purple);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .event-card:hover, .event-card.active {
+      border-color: var(--purple);
+      background: var(--panel);
+      box-shadow: 0 0 16px var(--glow-p);
+      transform: translateX(2px);
+    }
+
+    .event-card:hover::before, .event-card.active::before { opacity: 1; }
+
+    .event-card-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--violet);
+      margin-bottom: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .event-card-meta {
+      font-size: 0.65rem;
+      color: var(--cyan);
+      margin-bottom: 4px;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .event-card-location {
+      font-size: 0.62rem;
+      color: var(--text-dim);
+    }
+
+    .event-card-tags {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .tag {
+      font-size: 0.55rem;
+      padding: 2px 6px;
+      background: rgba(124,58,237,0.15);
+      border: 1px solid var(--purple-dim);
+      color: var(--purple-hi);
+      letter-spacing: 0.08em;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .no-events {
+      padding: 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── MAP ── */
+    #map {
+      background: var(--void);
+    }
+
+    /* Leaflet dark overrides */
+    .leaflet-tile { filter: brightness(0.35) saturate(0.6) hue-rotate(220deg) contrast(1.1); }
+    .leaflet-control-zoom a {
+      background: var(--panel) !important;
+      color: var(--purple-hi) !important;
+      border-color: var(--border) !important;
+    }
+    .leaflet-control-zoom a:hover {
+      background: var(--surface) !important;
+      color: var(--violet) !important;
+    }
+    .leaflet-control-attribution {
+      background: rgba(8,6,15,0.8) !important;
+      color: var(--text-muted) !important;
+      font-size: 0.55rem !important;
+    }
+    .leaflet-control-attribution a { color: var(--text-muted) !important; }
+
+    /* ── CUSTOM MARKER ── */
+    .custom-marker-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .custom-marker {
+      width: 14px; height: 14px;
+      background: var(--purple);
+      border: 2px solid var(--violet);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--purple), 0 0 20px var(--glow-p);
+      animation: markerPulse 3s infinite;
+      cursor: pointer;
+    }
+
+    .custom-marker.active {
+      background: var(--cyan);
+      border-color: #fff;
+      box-shadow: 0 0 15px var(--cyan), 0 0 30px var(--glow-c);
+    }
+
+    @keyframes markerPulse {
+      0%, 100% { box-shadow: 0 0 8px var(--purple), 0 0 16px var(--glow-p); }
+      50% { box-shadow: 0 0 16px var(--purple), 0 0 32px var(--glow-p), 0 0 48px rgba(124,58,237,0.15); }
+    }
+
+    /* ── POPUP ── */
+    .leaflet-popup-content-wrapper {
+      background: var(--panel) !important;
+      border: 1px solid var(--purple) !important;
+      border-radius: 0 !important;
+      box-shadow: 0 0 20px var(--glow-p), 0 0 40px rgba(124,58,237,0.1) !important;
+      color: var(--text) !important;
+      font-family: 'Space Mono', monospace !important;
+    }
+
+    .leaflet-popup-tip { background: var(--purple) !important; }
+
+    .leaflet-popup-close-button {
+      color: var(--purple-hi) !important;
+      font-size: 1rem !important;
+    }
+
+    .popup-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--violet);
+      margin-bottom: 8px;
+      text-shadow: 0 0 8px var(--glow-p);
+    }
+
+    .popup-row {
+      font-size: 0.7rem;
+      margin-bottom: 4px;
+      color: var(--text-dim);
+    }
+
+    .popup-row span { color: var(--cyan); }
+
+    .popup-desc {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      margin: 8px 0;
+      line-height: 1.5;
+      border-left: 2px solid var(--purple-dim);
+      padding-left: 8px;
+    }
+
+    .popup-link {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 5px 12px;
+      background: transparent;
+      border: 1px solid var(--purple);
+      color: var(--purple-hi);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .popup-link:hover {
+      background: var(--purple);
+      color: #fff;
+      box-shadow: 0 0 12px var(--glow-p);
+    }
+
+    /* ── CORNER DECORATIONS ── */
+    .corner {
+      position: fixed;
+      width: 24px; height: 24px;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .corner::before, .corner::after {
+      content: '';
+      position: absolute;
+      background: var(--purple-hi);
+      box-shadow: 0 0 6px var(--purple);
+    }
+    .corner-tl { top: 58px; left: 0; }
+    .corner-tl::before { width: 2px; height: 16px; top: 0; left: 0; }
+    .corner-tl::after  { width: 16px; height: 2px; top: 0; left: 0; }
+
+    .corner-br { bottom: 0; right: 0; }
+    .corner-br::before { width: 2px; height: 16px; bottom: 0; right: 0; }
+    .corner-br::after  { width: 16px; height: 2px; bottom: 0; right: 0; }
+
+    /* ── COUNT BADGE ── */
+    #event-count {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      padding: 6px 16px 0;
+      letter-spacing: 0.08em;
+    }
+
+    #event-count strong { color: var(--purple-hi); }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <header id="header">
+    <div class="logo">EVENT<span>MAP</span> // GRID</div>
+    <div class="header-sep"></div>
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      <span id="header-date">──</span>
+      <span>// PARIS NODE</span>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+
+    <div class="sidebar-section">
+      <div class="section-label">// Filtrer par date</div>
+      <div class="date-wrapper">
+        <input type="date" id="date-input" />
+        <button class="date-clear" onclick="clearDate()">↺ Toutes les dates</button>
+      </div>
+    </div>
+
+    <div id="event-count"></div>
+
+    <div id="event-list"></div>
+
+  </aside>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+</div>
+
+<!-- Corner decorations -->
+<div class="corner corner-tl"></div>
+<div class="corner corner-br"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  let allEvents = [];
+  let markers = [];
+  let activeCard = null;
+  let activeMarkerId = null;
+
+  // ── MAP INIT ──
+  const map = L.map('map', {
+    center: [48.857, 2.347],
+    zoom: 12,
+    zoomControl: true,
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19,
+  }).addTo(map);
+
+  // ── LOAD EVENTS ──
+  fetch('events.json')
+    .then(r => r.json())
+    .then(data => {
+      allEvents = data;
+      renderAll(allEvents);
+    })
+    .catch(err => {
+      console.error('Erreur chargement events.json :', err);
+      document.getElementById('event-list').innerHTML =
+        '<div class="no-events">// ERREUR CHARGEMENT //</div>';
+    });
+
+  // ── DATE INPUT ──
+  const dateInput = document.getElementById('date-input');
+  const headerDate = document.getElementById('header-date');
+
+  dateInput.addEventListener('change', () => {
+    const val = dateInput.value;
+    if (val) {
+      headerDate.textContent = formatDate(val);
+      const filtered = allEvents.filter(e => e.date === val);
+      renderAll(filtered);
+    } else {
+      clearDate();
+    }
+  });
+
+  function clearDate() {
+    dateInput.value = '';
+    headerDate.textContent = '──';
+    renderAll(allEvents);
+  }
+
+  // ── RENDER ──
+  function renderAll(events) {
+    renderList(events);
+    renderMarkers(events);
+  }
+
+  function renderList(events) {
+    const list = document.getElementById('event-list');
+    const count = document.getElementById('event-count');
+
+    count.innerHTML = `<strong>${events.length}</strong> événement${events.length !== 1 ? 's' : ''}`;
+
+    if (events.length === 0) {
+      list.innerHTML = '<div class="no-events">// AUCUN ÉVÉNEMENT<br>POUR CETTE DATE //</div>';
+      return;
+    }
+
+    list.innerHTML = events.map(e => `
+      <div class="event-card" id="card-${e.id}" onclick="focusEvent(${e.id})">
+        <div class="event-card-title">${e.title}</div>
+        <div class="event-card-meta">◈ ${formatDate(e.date)} · ${e.time}</div>
+        <div class="event-card-location">⌖ ${e.location.label}</div>
+        <div class="event-card-tags">
+          ${e.tags.map(t => `<span class="tag">#${t}</span>`).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderMarkers(events) {
+    // Clear existing markers
+    markers.forEach(m => map.removeLayer(m.layer));
+    markers = [];
+
+    events.forEach(e => {
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="custom-marker" id="marker-${e.id}"></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+        popupAnchor: [0, -10],
+      });
+
+      const marker = L.marker([e.location.lat, e.location.lng], { icon })
+        .addTo(map)
+        .bindPopup(buildPopup(e), { maxWidth: 280, minWidth: 240 });
+
+      marker.on('click', () => {
+        setActiveCard(e.id);
+        setActiveMarker(e.id);
+      });
+
+      markers.push({ id: e.id, layer: marker });
+    });
+
+    // Fit bounds if events
+    if (events.length > 0) {
+      const bounds = L.latLngBounds(events.map(e => [e.location.lat, e.location.lng]));
+      map.fitBounds(bounds, { padding: [60, 60] });
+    }
+  }
+
+  function buildPopup(e) {
+    return `
+      <div class="popup-title">${e.title}</div>
+      <div class="popup-row">◈ <span>${formatDate(e.date)}</span> à <span>${e.time}</span></div>
+      <div class="popup-row">⌖ <span>${e.location.label}</span></div>
+      <div class="popup-desc">${e.description}</div>
+      <a class="popup-link" href="${e.link}" target="_blank" rel="noopener">→ En savoir plus</a>
+    `;
+  }
+
+  function focusEvent(id) {
+    const event = allEvents.find(e => e.id === id);
+    if (!event) return;
+
+    setActiveCard(id);
+    setActiveMarker(id);
+
+    const marker = markers.find(m => m.id === id);
+    if (marker) {
+      map.setView([event.location.lat, event.location.lng], 14, { animate: true });
+      marker.layer.openPopup();
+    }
+  }
+
+  function setActiveCard(id) {
+    if (activeCard) {
+      const prev = document.getElementById(`card-${activeCard}`);
+      if (prev) prev.classList.remove('active');
+    }
+    activeCard = id;
+    const card = document.getElementById(`card-${id}`);
+    if (card) {
+      card.classList.add('active');
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  function setActiveMarker(id) {
+    if (activeMarkerId !== null) {
+      const prevEl = document.getElementById(`marker-${activeMarkerId}`);
+      if (prevEl) prevEl.classList.remove('active');
+    }
+    activeMarkerId = id;
+    const el = document.getElementById(`marker-${id}`);
+    if (el) el.classList.add('active');
+  }
+
+  function formatDate(dateStr) {
+    const [y, m, d] = dateStr.split('-');
+    const months = ['JAN','FÉV','MAR','AVR','MAI','JUN','JUL','AOÛ','SEP','OCT','NOV','DÉC'];
+    return `${d} ${months[parseInt(m)-1]} ${y}`;
+  }
+</script>
+
+</body>
+</html>
