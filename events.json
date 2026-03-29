@@ -1,0 +1,114 @@
+[
+  {
+    "id": 1,
+    "title": "Hackathon Nuit Noire",
+    "description": "48h de code intensif dans les sous-sols du FabLab. Thème : systèmes distribués et réseaux mesh autonomes. Pizza, caféine et pull requests à volonté.",
+    "date": "2026-04-05",
+    "time": "20:00",
+    "location": {
+      "lat": 48.8566,
+      "lng": 2.3522,
+      "label": "FabLab République, Paris"
+    },
+    "link": "https://example.com/hackathon-nuit-noire",
+    "tags": ["hackathon", "code", "nuit"]
+  },
+  {
+    "id": 2,
+    "title": "CTF : Capture The Flag Underground",
+    "description": "Compétition de cybersécurité ouverte à tous niveaux. Challenges de reverse engineering, crypto, web exploitation et forensics. Inscriptions limitées à 64 équipes.",
+    "date": "2026-04-12",
+    "time": "14:00",
+    "location": {
+      "lat": 48.8738,
+      "lng": 2.295,
+      "label": "École 42, Paris 17e"
+    },
+    "link": "https://example.com/ctf-underground",
+    "tags": ["cybersécurité", "CTF", "hacking"]
+  },
+  {
+    "id": 3,
+    "title": "Meetup IA Générative & Art",
+    "description": "Exploration des croisements entre intelligence artificielle et création artistique. Démos live, échanges avec des artistes numériques et chercheurs. Entrée libre.",
+    "date": "2026-04-18",
+    "time": "19:30",
+    "location": {
+      "lat": 48.8606,
+      "lng": 2.3376,
+      "label": "Centre Pompidou, Paris 4e"
+    },
+    "link": "https://example.com/meetup-ia-art",
+    "tags": ["IA", "art", "meetup"]
+  },
+  {
+    "id": 4,
+    "title": "Workshop : Soudure & Électronique DIY",
+    "description": "Apprenez à souder vos premiers circuits, fabriquer un badge électronique et bidouiller un microcontrôleur ESP32. Matériel fourni. Niveau débutant bienvenu.",
+    "date": "2026-04-19",
+    "time": "10:00",
+    "location": {
+      "lat": 48.8329,
+      "lng": 2.3689,
+      "label": "Hackerspace Paris 13e"
+    },
+    "link": "https://example.com/workshop-soudure",
+    "tags": ["hardware", "DIY", "électronique"]
+  },
+  {
+    "id": 5,
+    "title": "Conférence : Vie Privée à l'Ère Post-Quantique",
+    "description": "Comment les ordinateurs quantiques vont changer le chiffrement tel qu'on le connaît. Présentation des nouvelles normes NIST et implications pratiques pour les développeurs.",
+    "date": "2026-04-25",
+    "time": "18:00",
+    "location": {
+      "lat": 48.8462,
+      "lng": 2.3441,
+      "label": "Cité des Sciences, La Villette"
+    },
+    "link": "https://example.com/conf-post-quantique",
+    "tags": ["crypto", "quantique", "conférence"]
+  },
+  {
+    "id": 6,
+    "title": "Game Jam : Dystopies Numériques",
+    "description": "72 heures pour créer un jeu vidéo sur le thème de la surveillance de masse et des futures dystopies technologiques. Tous moteurs acceptés. Prix en crypto.",
+    "date": "2026-05-02",
+    "time": "09:00",
+    "location": {
+      "lat": 48.8698,
+      "lng": 2.308,
+      "label": "Station F, Paris 13e"
+    },
+    "link": "https://example.com/gamejam-dystopies",
+    "tags": ["game jam", "jeu vidéo", "dystopie"]
+  },
+  {
+    "id": 7,
+    "title": "Repair Café Tech",
+    "description": "Ramenez vos appareils en panne : ordinateurs, téléphones, consoles, imprimantes 3D. Des bénévoles techniciens vous aident à les réparer gratuitement. Lutter contre l'obsolescence programmée.",
+    "date": "2026-05-09",
+    "time": "14:00",
+    "location": {
+      "lat": 48.8792,
+      "lng": 2.3439,
+      "label": "Médiathèque Marguerite Yourcenar, Paris 15e"
+    },
+    "link": "https://example.com/repair-cafe",
+    "tags": ["repair", "DIY", "écologie"]
+  },
+  {
+    "id": 8,
+    "title": "Nuit du Code : Open Source Sprint",
+    "description": "Contribuez à des projets open source toute la nuit. Mainteneurs de projets présents pour guider les nouveaux contributeurs. Focus sur les outils de confidentialité et décentralisation.",
+    "date": "2026-05-15",
+    "time": "21:00",
+    "location": {
+      "lat": 48.8869,
+      "lng": 2.3431,
+      "label": "Mozilla Paris, Paris 18e"
+    },
+    "link": "https://example.com/nuit-open-source",
+    "tags": ["open source", "contribution", "nuit"]
+  }
+]
